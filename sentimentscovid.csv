@@ -1,0 +1,6 @@
+,id,sentence,logits,sentiment
+0,123,this is the worst tweet ever,"{'logits': [0.20749032497406006, -0.8023962378501892, 2.7674074172973633]}",negative
+1,132,Ariana Grande KIIS FM Yours Truly CD listening party in Burbank https://t.co/ClQIcx8Z6V #ArianaGrande,"{'logits': [2.6356194019317627, 4.546546459197998, -2.077968120574951]}",positive
+2,3245,I hate her but... I love her songs Dammit ._.#ArianaGrande,"{'logits': [0.3581102788448334, 0.7440865635871887, 1.326380968093872]}",negative
+3,324321,"smdh this country cares more about black friday than it does about black lives. say it today, say it everyday #blacklivesmatter #blm","{'logits': [0.6244286298751831, -0.39530670642852783, 2.0127570629119873]}",negative
+4,425,Black Lives Matter 5280 Recaps Trip to Standing Rock to Oppose Oil Pipeline - Westword https://t.co/FyBEzP3uOt… https://t.co/WOvAtE6pR3,"{'logits': [2.727501630783081, 0.5236973166465759, -0.3744475841522217]}",neutral

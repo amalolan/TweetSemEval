@@ -21,16 +21,16 @@ class SemEvalClassifierAttention(Model):
     """This ``Model`` performs text classification for SemEval 2017 task 4 subset A.
     """
 
-    def __init__(self,  
-                vocab: Vocabulary, 
-                text_field_embedder: TextFieldEmbedder,
-                embedding_dropout: float,
-                encoder: Seq2SeqEncoder,
-                integrator: Seq2SeqEncoder,
-                integrator_dropout: float,
-                output_layer: Union[FeedForward, Maxout],
-                initializer: InitializerApplicator = InitializerApplicator(),
-                regularizer: Optional[RegularizerApplicator] = None) -> None:
+    def __init__(self,
+                 vocab: Vocabulary,
+                 text_field_embedder: TextFieldEmbedder,
+                 embedding_dropout: float,
+                 encoder: Seq2SeqEncoder,
+                 integrator: Seq2SeqEncoder,
+                 integrator_dropout: float,
+                 output_layer: Union[FeedForward, Maxout],
+                 initializer: InitializerApplicator = InitializerApplicator(),
+                 regularizer: Optional[RegularizerApplicator] = None) -> None:
         super().__init__(vocab, regularizer)
         # We need the embeddings to convert word IDs to their vector representations
         self.embedding_dropout = torch.nn.Dropout(embedding_dropout)
@@ -41,7 +41,7 @@ class SemEvalClassifierAttention(Model):
         self.integrator_dropout = torch.nn.Dropout(integrator_dropout)
 
         self._self_attentive_pooling_projection = torch.nn.Linear(
-                self.integrator.get_output_dim(), 1)
+            self.integrator.get_output_dim(), 1)
         self.output_layer = output_layer
 
         # Monitor the metrics - we use accuracy, as well as prec, rec, f1 for 4 (very positive)
@@ -73,7 +73,8 @@ class SemEvalClassifierAttention(Model):
         encoded_tokens = self.encoder(dropped_embedded_text, text_mask)
 
         # Compute biattention. This is a special case since the inputs are the same.
-        attention_logits = encoded_tokens.bmm(encoded_tokens.permute(0, 2, 1).contiguous())
+        attention_logits = encoded_tokens.bmm(
+            encoded_tokens.permute(0, 2, 1).contiguous())
         attention_weights = util.masked_softmax(attention_logits, text_mask)
         encoded_text = util.weighted_sum(encoded_tokens, attention_weights)
 
@@ -85,24 +86,28 @@ class SemEvalClassifierAttention(Model):
 
         # Simple Pooling layers
         max_masked_integrated_encodings = util.replace_masked_values(
-                integrated_encodings, text_mask.unsqueeze(2), -1e7)
+            integrated_encodings, text_mask.unsqueeze(2), -1e7)
         max_pool = torch.max(max_masked_integrated_encodings, 1)[0]
         min_masked_integrated_encodings = util.replace_masked_values(
-                integrated_encodings, text_mask.unsqueeze(2), +1e7)
+            integrated_encodings, text_mask.unsqueeze(2), +1e7)
         min_pool = torch.min(min_masked_integrated_encodings, 1)[0]
-        mean_pool = torch.sum(integrated_encodings, 1) / torch.sum(text_mask, 1, keepdim=True)
+        mean_pool = torch.sum(integrated_encodings, 1) / \
+            torch.sum(text_mask, 1, keepdim=True)
 
         # Self-attentive pooling layer
         # Run through linear projection. Shape: (batch_size, sequence length, 1)
         # Then remove the last dimension to get the proper attention shape (batch_size, sequence length).
         self_attentive_logits = self._self_attentive_pooling_projection(
-                integrated_encodings).squeeze(2)
+            integrated_encodings).squeeze(2)
         self_weights = util.masked_softmax(self_attentive_logits, text_mask)
-        self_attentive_pool = util.weighted_sum(integrated_encodings, self_weights)
+        self_attentive_pool = util.weighted_sum(
+            integrated_encodings, self_weights)
 
-        pooled_representations = torch.cat([max_pool, min_pool, mean_pool, self_attentive_pool], 1)
-        pooled_representations_dropped = self.integrator_dropout(pooled_representations)
-        
+        pooled_representations = torch.cat(
+            [max_pool, min_pool, mean_pool, self_attentive_pool], 1)
+        pooled_representations_dropped = self.integrator_dropout(
+            pooled_representations)
+
         logits = self.output_layer(pooled_representations_dropped)
 
         # In AllenNLP, the output of forward() is a dictionary.
@@ -137,12 +142,13 @@ class SemEvalClassifierAttention(Model):
         }
         return results
 
-   
+
     @classmethod
     def from_params(cls, vocab: Vocabulary, params: Params) -> 'SemEvalClassifierAttention':  # type: ignore
         # pylint: disable=arguments-differ
         embedder_params = params.pop("text_field_embedder")
-        text_field_embedder = TextFieldEmbedder.from_params(vocab=vocab, params=embedder_params)
+        text_field_embedder = TextFieldEmbedder.from_params(
+            vocab=vocab, params=embedder_params)
         embedding_dropout = params.pop("embedding_dropout")
         encoder = Seq2SeqEncoder.from_params(params.pop("encoder"))
         integrator = Seq2SeqEncoder.from_params(params.pop("integrator"))
@@ -158,10 +164,13 @@ class SemEvalClassifierAttention(Model):
         if elmo is not None:
             elmo = Elmo.from_params(elmo)
         use_input_elmo = params.pop_bool("use_input_elmo", False)
-        use_integrator_output_elmo = params.pop_bool("use_integrator_output_elmo", False)
+        use_integrator_output_elmo = params.pop_bool(
+            "use_integrator_output_elmo", False)
 
-        initializer = InitializerApplicator.from_params(params.pop('initializer', []))
-        regularizer = RegularizerApplicator.from_params(params.pop('regularizer', []))
+        initializer = InitializerApplicator.from_params(
+            params.pop('initializer', []))
+        regularizer = RegularizerApplicator.from_params(
+            params.pop('regularizer', []))
         params.assert_empty(cls.__name__)
 
         return cls(vocab=vocab,
